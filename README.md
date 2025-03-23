@@ -1,1 +1,2 @@
-# T.I.M.
+# TIM - *The Inner Maze*
+
