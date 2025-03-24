@@ -8,9 +8,11 @@ import { auth } from "./firebase";
 import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import Logout from "./components/Logout";
+import "./styles/AppStyles.css";
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [isLoginMode, setIsLoginMode] = useState(true);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -20,12 +22,19 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
+  const toggleAuthMode = () => {
+    setIsLoginMode((prevMode) => !prevMode);
+  };
+
   return (
     <div>
       {!user ? (
         <div>
-          <SignUp />
-          <Login />
+          {isLoginMode ? (
+            <Login toggleAuthMode={toggleAuthMode} />
+          ) : (
+            <SignUp toggleAuthMode={toggleAuthMode} />
+          )}
         </div>
       ) : (
         <Router>

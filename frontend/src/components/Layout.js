@@ -1,11 +1,14 @@
 import React from "react";
-import MainNav from "./MainNav";
+import MainNavigation from "./MainNavigation";
+import Footer from "./Footer";
+import "../styles/AppStyles.css";
 
 const Layout = ({ children }) => {
   return (
-    <div>
-      <MainNav />
+    <div className="layout">
+      <MainNavigation />
       <main>{children}</main>
+      <Footer />
     </div>
   );
 };
