@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { signUp } from "../authActions";
+import { signUp } from "../actions/authActions";
 import "../styles/Auth.css";
 
 const SignUp = ({ toggleAuthMode }) => {

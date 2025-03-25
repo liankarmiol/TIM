@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const logRoutes = require("./routes/logRoutes");
+const habitsRouter = require("../frontend/src/actions/habitActions");
 
 const app = express();
 const port = 5000;
@@ -16,6 +17,7 @@ app.get("/", (req, res) => {
 
 // Use routes
 app.use("/api/logs", logRoutes);
+app.use("/api/habits", habitsRouter);
 
 // Start the server
 app.listen(port, () => {
