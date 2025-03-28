@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const logRoutes = require("./routes/logRoutes");
-const habitsRouter = require("../frontend/src/actions/habitActions");
+const habitsRouter = require("./routes/habits");
 
 const app = express();
 const port = 5000;

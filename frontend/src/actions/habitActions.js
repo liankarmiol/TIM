@@ -1,35 +1,18 @@
-// src/actions/habitActions.js
+import axios from "axios";
+import { query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  Timestamp,
-} from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 
 /**
  * Create a new habit for the current user
  * @param {string} userId
- * @param {object} habitData - { name, color?, targetDays? }
- * @returns {Promise<string>} habitId
+ * @param {object} habitData - { name }
+ * @returns {Promise<object>} Created habit
  */
 export const createHabit = async (userId, habitData) => {
   try {
-    const docRef = await addDoc(collection(db, "habits"), {
-      ...habitData,
-      userId,
-      createdAt: serverTimestamp(),
-      // Default values
-      color: habitData.color || "#4CAF50",
-      targetDays: habitData.targetDays || [],
-    });
-    return docRef.id;
+    const response = await axios.post("/api/habits", { userId, ...habitData });
+    return response.data;
   } catch (error) {
     console.error("Error creating habit:", error);
     throw error;
@@ -43,14 +26,8 @@ export const createHabit = async (userId, habitData) => {
  */
 export const getHabits = async (userId) => {
   try {
-    const q = query(collection(db, "habits"), where("userId", "==", userId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      // Convert Firestore Timestamp to JS Date
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-    }));
+    const response = await axios.get(`/api/habits/${userId}`);
+    return response.data;
   } catch (error) {
     console.error("Error getting habits:", error);
     throw error;
@@ -61,64 +38,27 @@ export const getHabits = async (userId) => {
  * Toggle habit completion for a specific date
  * @param {string} userId
  * @param {string} habitId
- * @param {Date} date
- * @param {boolean} completed
- * @param {string} notes
+ * @param {string} date
  */
-export const toggleHabitCompletion = async (
-  userId,
-  habitId,
-  date,
-  completed,
-  notes = ""
-) => {
+export const toggleHabitCompletion = async (userId, habitId, date) => {
   try {
-    // Normalize date to start of day for consistent comparison
-    const dateStart = new Date(date);
-    dateStart.setHours(0, 0, 0, 0);
-
-    const completionsRef = collection(db, "completions");
-    const q = query(
-      completionsRef,
-      where("userId", "==", userId),
-      where("habitId", "==", habitId),
-      where("date", "==", Timestamp.fromDate(dateStart))
-    );
-
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      // Create new completion record
-      await addDoc(completionsRef, {
-        userId,
-        habitId,
-        date: Timestamp.fromDate(dateStart),
-        completed,
-        notes,
-        updatedAt: serverTimestamp(),
-      });
-    } else {
-      // Update existing record
-      const docRef = doc(db, "completions", snapshot.docs[0].id);
-      await updateDoc(docRef, {
-        completed,
-        notes,
-        updatedAt: serverTimestamp(),
-      });
-    }
+    const response = await axios.put(`/api/habits/${userId}/${habitId}`, {
+      date,
+    });
+    return response.data;
   } catch (error) {
-    console.error("Error updating completion:", error);
+    console.error("Error toggling habit completion:", error);
     throw error;
   }
 };
 
 /**
- * Get all completions for a habit within a date range
+ * Get completions for a habit within a date range
  * @param {string} userId
  * @param {string} habitId
  * @param {Date} startDate
  * @param {Date} endDate
- * @returns {Promise<Array>} Array of completion records
+ * @returns {Promise<Array>} Array of completion objects
  */
 export const getHabitCompletions = async (
   userId,
@@ -132,44 +72,30 @@ export const getHabitCompletions = async (
       completionsRef,
       where("userId", "==", userId),
       where("habitId", "==", habitId),
-      where("date", ">=", Timestamp.fromDate(startDate)),
-      where("date", "<=", Timestamp.fromDate(endDate))
+      where("date", ">=", startDate),
+      where("date", "<=", endDate)
     );
-
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      date: doc.data().date?.toDate() || new Date(),
     }));
   } catch (error) {
-    console.error("Error getting completions:", error);
+    console.error("Error getting habit completions:", error);
     throw error;
   }
 };
 
 /**
- * Delete a habit and all its completions
+ * Delete a habit
  * @param {string} userId
  * @param {string} habitId
+ * @returns {Promise<void>}
  */
 export const deleteHabit = async (userId, habitId) => {
   try {
-    // First delete the habit
-    await deleteDoc(doc(db, "habits", habitId));
-
-    // Then delete all associated completions
-    const completionsRef = collection(db, "completions");
-    const q = query(
-      completionsRef,
-      where("userId", "==", userId),
-      where("habitId", "==", habitId)
-    );
-
-    const snapshot = await getDocs(q);
-    const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
-
-    await Promise.all(deletePromises);
+    const habitRef = doc(db, "habits", habitId);
+    await deleteDoc(habitRef);
   } catch (error) {
     console.error("Error deleting habit:", error);
     throw error;

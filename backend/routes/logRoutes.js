@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { db } = require("../firebase/firebase");
+const { db } = require("../firebase/firebase-config");
 
 // POST route to save a log to Firebase
 router.post("/", async (req, res) => {

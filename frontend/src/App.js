@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
 import HabitTracker from "./pages/HabitTracker";
@@ -9,17 +9,18 @@ import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import Logout from "./components/Logout";
 import "./styles/AppStyles.css";
+import { onAuthStateChanged } from "firebase/auth";
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [isLoginMode, setIsLoginMode] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Firebase initialized!", user ? "User logged in" : "No user");
       setUser(user);
     });
-
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   const toggleAuthMode = () => {
